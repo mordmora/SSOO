@@ -1,0 +1,234 @@
+{
+	// Place your snippets for c here. Each snippet is defined under a snippet name and has a prefix, body and 
+	// description. The prefix is what is used to trigger the snippet and the body will be expanded and inserted. Possible variables are:
+	// $1, $2 for tab stops, $0 for the final cursor position, and ${1:label}, ${2:another} for placeholders. Placeholders with the 
+	// same ids are connected.
+	// Example:
+	// "Print to console": {
+	// 	"prefix": "log",
+	// 	"body": [
+	// 		"console.log('$1');",
+	// 		"$2"
+	// 	],
+	// 	"description": "Log output to console"
+	// }
+	"inicializar programa multihijos": {
+		"prefix": "init_program",
+		"body": [
+			"#include<stdio.h>",
+			"#include<stdlib.h>",
+			"#include<sys/wait.h>",
+			"#include<sys/stat.h>",
+			"#include<sys/shm.h>",
+			"#include<sys/ipc.h>",
+			"#include<unistd.h>",
+			"#include<string.h>",
+			"",
+			"int main(int argc, char**argv){",
+			"",
+			"\tsize_t root = getpid();",
+			"",
+			"\tif(root == getpid()){//parent block",
+			"",
+			"\t}else{//childs block",
+			"",
+			"\t}",
+			"\treturn EXIT_SUCCESS;",
+			"}"
+		],
+		"description": "Crea el cuerpo de un programa importando de una vez\nlas librerias mas usadas y la funcion principal con argumentos"
+	},
+	"segmento de memoria compartida generico": {
+		"prefix": "init_generic_shm",
+		"body": [
+			"$1 *$2 = NULL;",
+			"int $3 = shmget(IPC_PRIVATE, $4, 0666 | IPC_CREAT);",
+			"$2 = shmat($3, 0, 0);",
+		],
+		"description": "Crea un segmento de memoria compartido para datos genericos"
+	},
+	"leer archivo, orientado a strings": {
+		"prefix": "read_fstr",
+		"body": [
+			"char* read_f(const char* f_name){",
+			"\tFILE* f;",
+			"\tchar* line = NULL;",
+			"\tsize_t len=0;",
+			"\tssize_t read;",
+			"\n",
+			"\tf = fopen(f_name, \"r\");",
+			"\tif(f == NULL){",
+			"\t\tperror(\"File error\\n\");",
+			"\t\texit(1);",
+			"\t}",
+			"",
+			"\tchar* buff = (char*)calloc(1, sizeof(char));",
+			"\tbuff[0] = '\\0';",
+			"",
+			"\twhile((read = getline(&line, &len, f)) != -1){",
+			"\t\tbuff = (char*)realloc(buff, (strlen(buff) + strlen(line) + 1) * sizeof(char));",
+			"\t\tstrcat(buff, line);",
+			"\t}",
+			"",
+			"\tfclose(f);",
+			"\tif(line)",
+			"\t\tfree(line);",
+			"",
+			"\treturn buff;",
+			"}"
+		]
+	},
+	"crear jerarquia de 1 nivel con iterador": {
+		"prefix": "crt_1lv_fork",
+		"body": [
+			"int i; //child index",
+			"for(i = 0; i < $1; i++){",
+			"\tif(!fork())",
+			"\t\tbreak;",
+			"}"
+		]
+	},
+	"wait": {
+		"prefix": "__wait",
+		"body": [
+			"for(int k = 0; k < $1; k++)",
+			"\twait(NULL);"
+		]
+	},
+	"vector en memoria compartida": {
+		"prefix": "shm_vector",
+		"body": [
+			"$1 *vec$2 = NULL;",
+			"int vec$2_size = $3",
+			"size_t vec$2_space = vec$2_size * sizeof($1);",
+			"int shm_vec$2 = shmget(IPC_PRIVATE, vec$2_space, 0600 | IPC_CREAT);",
+			"vec$2 = ($1*)shmat(shm_vec$2,0,0);",
+		]
+	},
+	"substrings": {
+		"prefix": "substr",
+		"body": [
+			"char* substr(const char* str, int start, int lenght){",
+			"if(start < 0 || lenght <= 0 || start + lenght > strlen(str))",
+			"return NULL;",
+			"",
+			"char* tmp = (char*)malloc((lenght + 1) * sizeof(char));",
+			"if(tmp == NULL)",
+			"return NULL;",
+			"",
+			"strncpy(tmp, str + start, lenght);",
+			"tmp[lenght] = '\\0';",
+			"return tmp;",
+			"}"
+		]
+	},
+	"obtener ocurrencias": {
+		"prefix": "get_substr_occurences",
+		"body": [
+			"int* get_occurrences(char* src,char* pattern ,int offset, int *__vsize){",
+			"int ini_size = 10;",
+			"int* vec_pos = (int*)calloc(ini_size, sizeof(int));",
+			"int size = ini_size;",
+			"char* tmp = src;",
+			"int i = 0;",
+			"while((tmp = strstr(tmp, pattern)) != NULL){",
+			"int pos = tmp - src;",
+			"",
+			"if(i >= size){",
+			"size*=2;",
+			"vec_pos = (int*)realloc(vec_pos, size * sizeof(int));",
+			"if(vec_pos == NULL){",
+			"perror(\"Memory error\\n\");",
+			"exit(1);",
+			"}",
+			"}",
+			"vec_pos[i++] = pos + offset;",
+			"tmp+=1;",
+			"}",
+			"*__vsize = i;",
+			"printf(\"I val: %d\\n\", i);",
+			"vec_pos = (int*)realloc(vec_pos, i*sizeof(int));",
+			"return vec_pos;",
+			"}",
+		]
+	},
+	"inicializar matriz": {
+		"prefix": "setup_matrix",
+		"body": [
+			"unsigned int sizeof_dm(int rows, int cols, size_t sizeof_element){",
+			"size_t size = rows * sizeof(void*);",
+			"size += (cols * rows * sizeof_element);",
+			"return size;",
+			"}",
+			"",
+			"void create_index(void **m, int rows, int cols, size_t sizeof_element){",
+			"int i; ",
+			"size_t sizeRows = cols * sizeof_element;",
+			"m[0] = m + rows;",
+			"for(i = 1; i < rows; i++){",
+			"m[i] = (m[i-1] + sizeRows);",
+			"}",
+			"}",
+		]
+	},
+	"crear matriz generica en memoria compartida": {
+		"prefix": "generic_mtx_shm",
+		"body": [
+			"$1 **$2;",
+			"size_t $3 = sizeof_dm($4, $5, sizeof($1));",
+			"int $6 = shmget(IPC_PRIVATE, $3, 0666 | IPC_CREAT);",
+			"$2 = shmat($6,0,0);",
+			"create_index((void*)$2,$4,$5, sizeof($1));"
+		]
+	},
+	"imprimir matriz": {
+		"prefix": "print_matrix",
+		"body": [
+			"void print_matrix(int** m, int f, int c){",
+			"for(int i = 0; i < f; i++){",
+			"for(int j = 0; j < c ;j++){",
+			"printf(\"%d\\t\", m[i][j]);",
+			"}",
+			"printf(\"\\n\");",
+			"}",
+			"}",
+		]
+	},
+	"crear segmento de memoria compartida para un vector en un struct": {
+		"prefix": "structV_shm",
+		"body": [
+			"typedef struct $1{",
+			"$3* $4;",
+			"}$1;",
+			"",
+			"",
+			"int $6;",
+			"$1* $5 = NULL;",
+			"int $2 = shmget(IPC_PRIVATE, sizeof($1) + $6*sizeof($3) , IPC_CREAT | S_IRUSR | S_IWUSR );",
+			"$5 = ($1*)shmat($2, 0, 0);",
+			"$5->$4 = ($3*)($5 + 1);",
+		]
+	},
+	"leer archvivo orientado a vector generico": {
+		"prefix": "read_f_v",
+		"body": [
+			"$1 *$2 = ($1*)malloc(sizeof($1)*$3);",
+			"for(int i = 0; i < $3; i++)",
+			"fscanf($4, \"%d\", &$2[i]);",
+		]
+	},
+	"producto de matrices": {
+		"prefix": "matrix_product",
+		"body": [
+			"int product_matrix(int **mA, int **mB, int f, int c, int n)",
+			"{",
+			"int res = 0;",
+			"for (int k = 0; k < n; k++)",
+			"{",
+			"res += mA[f][k] * mB[k][c];",
+			"}",
+			"return res;",
+			"}",
+		]
+	}
+}
