@@ -1,0 +1,123 @@
+{
+	"Vector Memoria Compartida":{
+		"prefix": "vectorSHM",
+		"body": [
+			"$1 *vector_$2 = NULL;",
+			"int tam_vector_$2 = $3;",
+			"size_t espacio_vector_$2 = tam_vector_$2 * sizeof($1);",
+			"int id_vector_$2 = shmget(IPC_PRIVATE, espacio_vector_$2, IPC_CREAT | S_IRUSR | S_IWUSR);",
+			"vector_$2 = ($1 *) shmat(id_vector_$2, 0, 0);",
+			"if(vector_$2 == NULL){\n\tprintf(\"No se pudo reservar espacio para vector_$2\\n\");\n\texit(EXIT_FAILURE);\n}",
+			"\n",
+			"//DESCONECTARSE Y ELIMINAR vector_$2",
+			"shmdt(vector_$2);",
+			"shmctl(id_vector_$2, IPC_RMID, 0);",
+			"vector_$2 = NULL;",
+			"$4"
+		],
+		"description": "Fragmento para crear vector de memoria compartida"
+	},
+
+	"Matriz Memoria Compartida":{
+		"prefix": "matrizSHM",
+		"body": [
+			"int $1 = $2;",
+			"int $3 = $4;",
+			"$5 **matriz_$6 = NULL;",
+			"size_t tam_filas_m_$6 = $1 * sizeof($5 *);",
+			"size_t tam_columnas_m_$6 = $3 * sizeof($5);",
+			"int id_matriz_$6 = shmget(IPC_PRIVATE, tam_filas_m_$6, IPC_CREAT | S_IRUSR | S_IWUSR);",
+			"matriz_$6 = ($5 **) shmat(id_matriz_$6, 0, 0);",
+			"if(matriz_$6 == NULL){\n\tprintf(\"No se pudo reservar espacio para matriz_$6\\n\");\n\texit(EXIT_FAILURE);\n}\n",
+
+			"int *ids_columnas_m_$6 = NULL;",
+			"int id_ids_columnas_m_$6 = shmget(IPC_PRIVATE, $1 * sizeof(int), IPC_CREAT | S_IRUSR | S_IWUSR);",
+			"ids_columnas_m_$6 = shmat(id_ids_columnas_m_$6, 0, 0);",
+			"if(ids_columnas_m_$6 == NULL){\n\tprintf(\"No se pudo reservar espacio para ids_columnas_m_$6\\n\");\n\texit(EXIT_FAILURE);\n}",
+
+			"for (int i = 0; i < $1; i++){",
+			"\tids_columnas_m_$6[i] = shmget(IPC_PRIVATE, tam_columnas_m_$6, IPC_CREAT | S_IRUSR | S_IWUSR);",
+			"\tmatriz_$6[i] = ($5 *) shmat(ids_columnas_m_$6[i], 0, 0);\n}",
+			"\n",
+			"//DESCONECTARSE Y ELIMINAR matriz_$6",
+			"for (int i = 0; i < $1; i++){",
+			"\tshmdt(matriz_$6[i]);",
+			"\tshmctl(ids_columnas_m_$6[i], IPC_RMID, 0);\n}",
+			"shmdt(matriz_$6);",
+			"shmctl(id_matriz_$6, IPC_RMID, 0);",
+			"matriz_$6 = NULL;",
+			"shmdt(ids_columnas_m_$6);",
+			"shmctl(id_ids_columnas_m_$6, IPC_RMID, 0);",
+			"ids_columnas_m_$6 = NULL;",
+			"$7"
+		],
+		"description": "Fragmento para crear matriz de memoria compartida"
+	},
+	"Abrir archivo":{
+		"prefix": "abrirArchivo",
+		"body": [
+			"FILE *archivo_$1 = NULL;",
+			"archivo_$1 = fopen($2, \"$3\");",
+			"if(archivo_$1 == NULL){\n\tprintf(\"No se pudo abrir archivo %s\\n\", $2);\n\texit(EXIT_FAILURE);\n}",
+			"\n",
+			"//CERRAR ARCHIVO archivo_$1",
+			"fclose(archivo_$1);",
+			"archivo_$1 = NULL;",
+			"$4"
+		],
+		"description": "Fragmento para controlar manejo de archivo"
+	},
+	"Crear N Procesos Forma 1":{
+		"prefix": "crearProcesosF1",
+		"body": [
+			"int nProcesos = $1;",
+			"pid_t *pidProcesos = NULL;",
+			"pidProcesos = (pid_t *)malloc(nProcesos * sizeof(pid_t));",
+			"if(pidProcesos == NULL){\n\tprintf(\"No se pudo reservar memoria para pidProcesos\\n\");\n\texit(EXIT_FAILURE);\n}",
+			"int $2;",
+    		"for ($2 = 0; $2 < nProcesos; $2++){",
+        	"\tpidProcesos[$2] = fork();",
+       		"\tif (pidProcesos[$2] == 0){",
+            "\t\tbreak;",
+        	"\t}",
+  			"}",
+			"if($2 == nProcesos){\n\tsleep(1);\n\tshowtree();\n}else{\n\tsleep(2);\n}",
+			"\n",
+			"//ELIMINAR ESPACIO DE MEMORIA PARA pidProcesos",
+			"free(pidProcesos);",
+			"pidProcesos = NULL;",
+			"$3"
+		],
+		"description": "Fragmento para crear n procesos hijos"
+	},
+	"Crear N Procesos Forma 2":{
+		"prefix": "crearProcesosF2",
+		"body": [
+			"int nProcesos = $1;",
+			"pid_t *pidProcesos = NULL;",
+			"pidProcesos = (pid_t *)malloc(nProcesos * sizeof(pid_t));",
+			"if(pidProcesos == NULL){\n\tprintf(\"No se pudo reservar memoria para pidProcesos\\n\");\n\texit(EXIT_FAILURE);\n}",
+			"int $2;",
+    		"for ($2 = 0; $2 < nProcesos; $2++){",
+        	"\tpidProcesos[$2] = fork();",
+       		"\tif (pidProcesos[$2] != 0){",
+            "\t\tbreak;",
+        	"\t}",
+  			"}",
+			"if($2 == 0){\n\tsleep(1);\n\tshowtree();\n}else{\n\tsleep(2);\n}",
+			"\n",
+			"//ELIMINAR ESPACIO DE MEMORIA PARA pidProcesos",
+			"free(pidProcesos);",
+			"pidProcesos = NULL;",
+			"$3"
+		],
+		"description": "Fragmento para crear n procesos hijos"
+	},
+	"Mostrar Arbol":{
+		"prefix": "showTree",
+		"body": [
+			"void showtree() {\n\tchar cmd[20] = {\"\"};\n\tsprintf(cmd, \"pstree -cAlp %d\", getpid());\n\tsystem(cmd);\n}"
+		],
+		"description": "Fragmento para crear funcion de mostrar arbol de procesos"
+	}
+}
