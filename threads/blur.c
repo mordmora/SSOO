@@ -111,6 +111,5 @@ int main(int argc, char**argv){
 
     imprimir_matriz(f, c, matriz_resultante);
 
-
     return EXIT_SUCCESS;
 }
