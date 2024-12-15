@@ -12,7 +12,6 @@ typedef struct
     int end;
 }limits;
 
-
 int sliding_blur_window(int f, int c, int i, int j, int factor){
     int row_start = i - factor;
     int row_end = i + factor;
@@ -41,7 +40,6 @@ void* blur(void* arg){
     }
     return NULL;
 }
-
 
 int** read_matrix(char* fname){
     FILE* file = fopen(fname, "r");

@@ -65,11 +65,10 @@ void* bucket_sort(void* args) {
     qsort(bucket, s, sizeof(int), compare);
     data* d = (data*)malloc(sizeof(data));
     d->s = s;
-    
+
     d->arr = bucket;
     return d;
 }
-
 
 int main(int argc, char** argv) {
 
